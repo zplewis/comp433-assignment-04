@@ -1,4 +1,4 @@
-package com.example.comp433assignment03;
+package com.example.comp433assignment04;
 
 import android.content.Context;
 import android.graphics.Bitmap;
