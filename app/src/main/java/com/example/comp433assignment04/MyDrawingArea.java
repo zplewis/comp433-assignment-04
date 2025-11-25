@@ -28,6 +28,8 @@ public class MyDrawingArea extends View {
     Path path = new Path();
     Bitmap bmp;
 
+    float strokeWidth = 20f;
+
     /**
      * Simple constructor to use when creating a view from code.
      *
@@ -127,7 +129,7 @@ public class MyDrawingArea extends View {
         Paint p = new Paint();
         p.setColor(Color.BLACK);
         p.setStyle(Paint.Style.STROKE);
-        p.setStrokeWidth(5f);
+        p.setStrokeWidth(strokeWidth);
 
         /*
         Note: Declare path somewhere outside onDraw
@@ -196,7 +198,7 @@ public class MyDrawingArea extends View {
         p.setColor(Color.BLACK);
         p.setStyle(Paint.Style.STROKE);
         p.setAntiAlias(true);
-        p.setStrokeWidth(5f);
+        p.setStrokeWidth(strokeWidth);
         c.drawPath(path, p); //path is global. The very same thing that onDraw uses.
         return bmp;
     }

@@ -32,6 +32,19 @@ public class CommentListAdapter extends ArrayAdapter<CommentItem> {
      */
     private Mode mode = Mode.NORMAL;
 
+
+    private int selectedPosition = -1;
+
+    public interface OnSelectionChangedListener {
+        void onSelectionChanged(int position, CommentItem item);
+    }
+
+    private OnSelectionChangedListener selectionListener;
+
+    public void setOnSelectionChangedListener(OnSelectionChangedListener listener) {
+        this.selectionListener = listener;
+    }
+
     /**
      * Constructor
      *
@@ -68,14 +81,6 @@ public class CommentListAdapter extends ArrayAdapter<CommentItem> {
         LinearLayout commentSection = convertView.findViewById(R.id.commentSection);
         TextView commentDateTime = convertView.findViewById(R.id.commentDateTime);
 
-        View[] views = {cImage, cName, cComment, checkbox, commentSection, commentDateTime};
-
-        for (View view : views) {
-            if (view == null) {
-                Log.e(MainActivity.TAG, "CommentListAdapter.getView(); one of the views is null.");
-            }
-        }
-
         cImage.setImageBitmap(currentItem.photo);
         cImage.setBackgroundColor(Color.parseColor("#f0f0f0"));
         cName.setText(currentItem.tags);
@@ -94,7 +99,46 @@ public class CommentListAdapter extends ArrayAdapter<CommentItem> {
             commentDateTime.setVisibility(View.VISIBLE);
         }
 
+        // This code is to allow you to select one checkbox at a time
+        checkbox.setOnCheckedChangeListener(null);
+
+        // Set the state of the checkbox based on the selected position
+        checkbox.setChecked(position == selectedPosition);
+
+        checkbox.setOnClickListener(v -> {
+            if (position == selectedPosition) {
+                selectedPosition = -1;
+            } else {
+                selectedPosition = position;
+            }
+
+            notifyDataSetChanged(); // force ListView to redraw rows with updated check state
+
+            // notify any listeners on the CommentListAdapter that the selection has changed
+            if (selectionListener != null) {
+                CommentItem selectedItem = (selectedPosition >= 0)
+                    ? getItem(selectedPosition)
+                    : null;
+
+                selectionListener.onSelectionChanged(selectedPosition, selectedItem);
+            }
+        });
+
         return convertView;
+    }
+
+    public CommentItem getSelectedItem() {
+        return (selectedPosition >= 0) ? getItem(selectedPosition) : null;
+    }
+
+    public String getTagsOfSelectedItem() {
+        CommentItem selectedItem = getSelectedItem();
+
+        if (selectedItem == null) {
+            return "";
+        }
+
+        return selectedItem.tags;
     }
 }
 

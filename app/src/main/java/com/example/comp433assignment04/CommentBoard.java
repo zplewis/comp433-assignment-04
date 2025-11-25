@@ -15,7 +15,9 @@ import androidx.core.view.WindowInsetsCompat;
 
 public class CommentBoard extends AppCompatActivity {
 
+    CommentListAdapter adapter;
 
+    String currentTags = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +39,9 @@ public class CommentBoard extends AppCompatActivity {
         TextView findTextView = findViewById(R.id.findTextbox);
         ListView lv = findViewById(R.id.listSearchResults);
         CheckBox chkIncludeSketches = findViewById(R.id.chkIncludeSketches);
+        TextView commentTextView = findViewById(R.id.tvSelectedTextView);
+
+
         findButton.setOnClickListener(v -> {
 
             // This is how you evaluate a view prior to a click
@@ -55,25 +60,48 @@ public class CommentBoard extends AppCompatActivity {
                         if (data != null) {
                             Log.v(MainActivity.TAG, "SketchTagger.onCreate(); data size: " + data.size());
                         }
-                        CommentListAdapter adapter = new CommentListAdapter(
+                         adapter = new CommentListAdapter(
                                 this,
                                 R.layout.list_item,
                                 data,
                                 CommentListAdapter.Mode.COMBINED_SEARCH
                         );
+
+                        // Now that you have the adapter, you need to know when items are selected
+                        adapter.setOnSelectionChangedListener((position, item) -> {
+                            Log.v(MainActivity.TAG, "CommentBoard search selection changed: position=" +
+                                    position + ", item=" + (item != null ? item.tags : "unavailable"));
+
+                            currentTags = "";
+                            commentTextView.setText("Please make a selection.");
+
+                            if (item != null) {
+                                currentTags = item.tags;
+                                commentTextView.setText("You selected: " + currentTags);
+                            }
+                        });
+
                         lv.setAdapter(adapter);
                     }
             ).onClick(v);
         });
 
+        // This
+
+
+
         // Get comments from Gemini based on the different characters
         Button commentButton = findViewById(R.id.commentButton);
-            commentButton.setOnClickListener(
-                ClickUtils.getCommentsOnClick(
-                    this,
-                        "", // this should be the tags
-                        data -> {}
-                )
-            );
+            commentButton.setOnClickListener(v -> {
+                        String theCurrentTags = currentTags;
+
+                        ClickUtils.getCommentsOnClick(
+                                this,
+                                theCurrentTags, // this should be the tags
+                                data -> {
+                                }
+                        ).onClick(v);
+                    }
+            ); // end of setOnClickListener
     } // end of onCreate
 }

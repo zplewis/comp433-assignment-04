@@ -104,7 +104,7 @@
             android:autofillHints="cars, vehicles"
             android:textSize="@dimen/comment_text_size"
             android:id="@+id/tvSelectedTextView"
-            android:text="Please make a selection"
+            android:text="Please make a selection."
             />
 
         <Button
@@ -120,8 +120,9 @@
 
     <ListView
         android:layout_width="match_parent"
-        android:layout_height="200dp"
-        android:id="@+id/listSearchResults"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:id="@+id/listCommentResults"
         />
 
     <!-- the back button at the bottom of the activity -->

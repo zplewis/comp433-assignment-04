@@ -76,5 +76,10 @@ public class SketchTagger extends AppCompatActivity {
 
         TextView textView = findViewById(R.id.tagsTextbox);
         textView.setText("");
+
+        TextView findTextView = findViewById(R.id.findTextbox);
+        findTextView.setText("");
+
+        ClickUtils.showToastOnClick(this, "Canvas, tags, and find textbox have been cleared.");
     }
 }
