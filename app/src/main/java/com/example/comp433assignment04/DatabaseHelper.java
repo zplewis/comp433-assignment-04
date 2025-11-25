@@ -448,7 +448,7 @@ public class DatabaseHelper {
         // return all of the tags in our response
         String sql = "; WITH selected_images AS (SELECT DISTINCT t7.IMAGE_ID FROM image_tags AS t7 ";
 
-        if (imageType > IMAGE_TYPE_BOTH && findText != null && !findText.trim().isEmpty()) {
+        if (findText != null && !findText.trim().isEmpty()) {
             sql += " WHERE LOWER(t7.tag) LIKE '%' || LOWER('" + findText + "') || '%' ";
         }
 
