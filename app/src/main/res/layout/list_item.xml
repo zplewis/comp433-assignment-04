@@ -9,6 +9,19 @@
     android:orientation="horizontal"
     >
 
+    <!-- visibility="invisible" hides the object but keeps the space it takes up -->
+    <!-- visibility="gone" both hides the object and it does not take up space -->
+    <!-- by setting visibility="gone", we can reuse this list item in CommentBoard,
+    for both the list of images at the top and the list of comments at the bottom -->
+    <!-- use sp for text size, always (scale-independent pixels, respecting accessibility -->
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:id="@+id/chkSelectedImage"
+
+        />
+
     <ImageView
         android:layout_width="60dp"
         android:layout_height="60dp"
@@ -16,35 +29,59 @@
         android:background="#AAAAAA"
         />
 
+    <!-- container for title, comment, and comment date/time -->
     <LinearLayout
-        android:layout_width="260dp"
+        android:layout_width="0dp"
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:layout_marginTop="0dp"
         android:layout_marginLeft="10dp"
+        android:layout_weight="1"
         >
 
-
+        <!-- container for the title + comment with shared background -->
+        <!-- default color is null, should be #f0f0f0 for comment board bottom list -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="null"
+            android:id="@+id/commentSection"
+            >
 
     <TextView
         android:layout_width="match_parent"
-        android:layout_height="30sp"
+        android:layout_height="wrap_content"
         android:id="@+id/name"
-        android:textFontWeight="@integer/material_motion_duration_medium_2"
-        android:textSize="25sp"
+        android:textStyle="bold"
         android:text="Title"
         android:textAlignment="textStart"
+        android:textSize="@dimen/comment_text_size"
         />
 
     <TextView
         android:layout_width="match_parent"
-        android:layout_height="30sp"
+        android:layout_height="wrap_content"
         android:id="@+id/comment"
-        android:textSize="15sp"
         android:textAlignment="textStart"
         android:text="Comment"
+        android:textSize="@dimen/comment_text_size"
         />
 
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/commentDateTime"
+            android:textAlignment="textStart"
+            android:text="YYYY-MM-DD HH:MM"
+            android:visibility="gone"
+            android:textSize="@dimen/comment_text_size"
+            />
+
     </LinearLayout>
+
+
 
 </LinearLayout>
