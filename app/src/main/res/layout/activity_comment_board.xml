@@ -18,6 +18,7 @@
         android:textSize="20dp"
         android:layout_marginBottom="5dp"
         android:textAlignment="center"
+        android:hint="Enter a tag to find images..."
         />
 
     <!-- the textbox and Find button -->
@@ -111,7 +112,6 @@
             android:id="@+id/commentButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:onClick="onClickCommentBtn"
             android:text="Comment"
             android:layout_marginStart="2sp"
             />

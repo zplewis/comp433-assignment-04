@@ -83,12 +83,14 @@ public class CommentListAdapter extends ArrayAdapter<CommentItem> {
 
         cImage.setImageBitmap(currentItem.photo);
         cImage.setBackgroundColor(Color.parseColor("#f0f0f0"));
-        cName.setText(currentItem.tags);
-        cComment.setText(currentItem.date);
+        cName.setText(currentItem.title);
+        cComment.setText(currentItem.description);
 
+        // Resets the views just in case
         checkbox.setVisibility(View.GONE);
         commentSection.setBackground(null);
         commentDateTime.setVisibility(View.GONE);
+        commentDateTime.setText("");
 
         if (mode == Mode.COMBINED_SEARCH) {
             checkbox.setVisibility(View.VISIBLE);
@@ -97,6 +99,7 @@ public class CommentListAdapter extends ArrayAdapter<CommentItem> {
         if (mode == Mode.GENERATED_COMMENTS) {
             commentSection.setBackgroundColor(Color.parseColor("#f0f0f0"));
             commentDateTime.setVisibility(View.VISIBLE);
+            commentDateTime.setText(currentItem.date);
         }
 
         // This code is to allow you to select one checkbox at a time
@@ -131,6 +134,10 @@ public class CommentListAdapter extends ArrayAdapter<CommentItem> {
         return (selectedPosition >= 0) ? getItem(selectedPosition) : null;
     }
 
+    /**
+     * The tags are displayed like the "title" of the ListItem within the ListView.
+     * @return
+     */
     public String getTagsOfSelectedItem() {
         CommentItem selectedItem = getSelectedItem();
 
@@ -138,7 +145,7 @@ public class CommentListAdapter extends ArrayAdapter<CommentItem> {
             return "";
         }
 
-        return selectedItem.tags;
+        return selectedItem.title;
     }
 }
 

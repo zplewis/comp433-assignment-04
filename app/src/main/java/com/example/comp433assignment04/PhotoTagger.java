@@ -59,9 +59,9 @@ public class PhotoTagger extends AppCompatActivity {
 
         Button saveButton = findViewById(R.id.saveButton);
         ImageView iv = findViewById(R.id.ivMain);
-        TextView textView = findViewById(R.id.tagsTextbox);
+        TextView tagsTextView = findViewById(R.id.tagsTextbox);
         saveButton.setOnClickListener(
-            ClickUtils.saveImageOnClick(this, iv, textView)
+            ClickUtils.saveImageOnClick(this, iv, tagsTextView)
         );
 
         // findImagesOnClick
@@ -86,7 +86,7 @@ public class PhotoTagger extends AppCompatActivity {
         Button tagsButton = findViewById(R.id.getTagsButton);
         tagsButton.setOnClickListener(
             // the callback parameter of this function MUST NOT be NULL
-            ClickUtils.getGeminiTagsOnClick(this, iv, findTextView, data -> {})
+            ClickUtils.getGeminiTagsOnClick(this, iv, tagsTextView, data -> {})
         );
     }
 

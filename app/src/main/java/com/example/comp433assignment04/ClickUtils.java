@@ -16,8 +16,11 @@ import androidx.appcompat.app.AlertDialog;
 import com.example.comp433assignment04.DataCallback;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public final class ClickUtils {
 
@@ -204,18 +207,146 @@ public final class ClickUtils {
 
             int numComments = comments.size();
 
-            showToastOnClick(context, numComments + " images found.");
+            String message = (numComments == 1) ? " image found." : " images found.";
+
+            showToastOnClick(context, numComments + message);
 
             callback.onData(comments);
         };
     }
 
+    /**
+     * Retrieves the comments from Gemini, identifies who the commenter is, and returns a list.
+     * @param context
+     * @param tags
+     * @param commenters
+     * @param lastComments
+     * @param callback
+     * @return
+     */
     public static View.OnClickListener getCommentsOnClick(
             Context context,
             String tags,
+            ArrayList<Commenter> commenters,
+            ArrayList<CommentItem> lastComments,
             DataCallback<ArrayList<CommentItem>> callback
     ) {
         return v -> {
+
+            int numCommenters = commenters.size();
+            String commenterList = "";
+
+            for (Commenter commenter : commenters) {
+                commenterList += commenter.name + " who is " + commenter.commentStyle + ", ";
+            }
+
+            String prompt = "There are " + numCommenters + " commenters with different commenting styles: " +
+                    commenterList + ". Generate 7-10 comments with a maximum of 20 words based on an " +
+                    " image with the following characteristics:\n" + tags + "\n" +
+                    "Have the comments take into account the last comments as if they are keeping the " +
+                    "conversation going. ";
+
+            if (lastComments != null && !lastComments.isEmpty()) {
+                prompt += "Here are the last comments: \n";
+
+                for (CommentItem commentItem : lastComments) {
+                    prompt += commentItem.title + ": " + commentItem.description + "\n";
+                }
+            }
+
+            prompt += "\n\nReturn to me the comments from the " + numCommenters + " commenters that " +
+                    "keep the conversation going. Put it in a text format where each line is in the format, 'Name: Comment' " +
+                    "\n where 'Name' represents the commenter name (Elmo, Oscar, etc.) and 'Comment' represents their comment. " +
+                    "Return no other text.";
+
+            Log.v(MainActivity.TAG, "Prompt to send to Gemini: " + prompt);
+
+            GeminiHelper.getCommentsFromGemini(
+                    context,
+                    prompt,
+                    new GeminiHelper.GeminiCallback() {
+                        @Override
+                        public void onSuccess(String text) {
+
+                            // This keeps the current list of comments but creates a new variable to be returned.
+                            // ArrayList maintains order of insertion, so no index required.
+                            ArrayList<CommentItem> newCommentItems = new ArrayList<>();
+
+                            // from the text, return an array of Comments
+                            if (text == null || text.isEmpty()) {
+                                callback.onData(new ArrayList<>());
+                                return;
+                            }
+
+                            // Get the current time to be saved with the comments
+                            String commentDateTime = LocalDateTime.now()
+                                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+
+                            // Sometimes, Gemini returns a Markdown response; if removing it
+                            // leaves nothing, then keep it.
+                            String cleaned = text.replaceAll("```[\\s\\S]*?```", "").trim();
+                            if (!cleaned.isEmpty()) {
+                                text = cleaned;
+                            }
+
+                            // Parse the comments from Gemini in the format, "Name: Comment"
+                            String[] lines = text.split("\\r?\\n");
+
+                            // For each line, get the commenter and the comment
+                            for (String line : lines) {
+                                if (line == null || line.isEmpty()) {
+                                    continue;
+                                }
+
+                                Comment comment = new Comment();
+
+                                if (!line.contains(":")) {
+                                    continue;
+                                }
+
+                                if (line.contains("```")) {
+                                    continue;
+                                }
+
+                                // Split the line based on the colon; the first part is the name of the commenter.
+                                String[] parts = line.split(":");
+
+                                if (parts.length < 2) {
+                                    continue;
+                                }
+
+                                String possibleCommenterName = parts[0];
+
+                                if (possibleCommenterName == null || possibleCommenterName.isEmpty()) {
+                                    continue;
+                                }
+
+                                for (Commenter commenter : commenters) {
+                                    if (Objects.equals(commenter.name, possibleCommenterName)) {
+                                        comment.commenter = commenter;
+                                        break;
+                                    }
+                                }
+
+                                if (comment.commenter == null) {
+                                    continue;
+                                }
+
+                                comment.text = parts[1].trim();
+                                comment.commentDate = commentDateTime;
+                                CommentItem commentItem = new CommentItem(comment);
+                                newCommentItems.add(commentItem);
+                            } // end of massive for loop
+
+                            callback.onData(newCommentItems);
+                        }
+
+                        @Override
+                        public void onError(Exception e) {
+                            callback.onData(new ArrayList<>());
+                        }
+                    }
+            );
 
         };
     }

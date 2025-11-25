@@ -97,6 +97,7 @@ public class DatabaseHelper {
             if (clearTables) {
                 mydb.execSQL("DROP TABLE IF EXISTS images");
                 mydb.execSQL("DROP TABLE IF EXISTS image_tags");
+                mydb.execSQL("DROP TABLE IF EXISTS image_comments");
                 ClickUtils.showToastOnClick(context, "All SQLite tables for this app have been dropped and created again.");
             }
 
@@ -114,6 +115,15 @@ public class DatabaseHelper {
                     "ID INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     "IMAGE_ID INTEGER NOT NULL, " +
                     "TAG TEXT NOT NULL COLLATE NOCASE)";
+            mydb.execSQL(sql);
+
+            // Store the comments in the database
+            sql = "CREATE TABLE IF NOT EXISTS image_comments (" +
+                    "ID INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "CREATED_AT TEXT DEFAULT CURRENT_TIMESTAMP, " +
+                    "IMAGE_ID INTEGER NOT NULL, " +
+                    "COMMENT_TEXT TEXT NOT NULL, " +
+                    "COMMENTER_ID INTEGER NOT NULL)";
             mydb.execSQL(sql);
 
             // Create a table to keep up with the image types.

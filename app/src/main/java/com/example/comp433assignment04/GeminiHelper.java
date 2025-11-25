@@ -1,7 +1,14 @@
 package com.example.comp433assignment04;
 
+import android.app.Activity;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.util.Log;
+import android.view.ViewGroup;
+import android.widget.ListView;
+import android.widget.TextView;
+
+import androidx.annotation.NonNull;
 
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.http.HttpTransport;
@@ -16,10 +23,23 @@ import com.google.api.services.vision.v1.model.EntityAnnotation;
 import com.google.api.services.vision.v1.model.Feature;
 import com.google.api.services.vision.v1.model.Image;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 public class GeminiHelper {
 
@@ -32,6 +52,14 @@ public class GeminiHelper {
      * Default constructor. Does nothing.
      */
     private GeminiHelper() {}
+
+    /**
+     * Defines an interface to act as a callback.
+     */
+    public interface GeminiCallback {
+        void onSuccess(String text);
+        void onError(Exception e);
+    }
 
     /**
      *
@@ -149,4 +177,164 @@ public class GeminiHelper {
         // get a list of descriptions
         return getVisionAPIDescriptions(response);
     }
+
+    /**
+     * Reaches out to Gemini to retrieve 3 comments. These 3 comments are then added to
+     * an arraylist of CommentItem objects which are then displayed on the screen in a ListView.
+     */
+    public static void getCommentsFromGemini(Context context, String geminiPrompt, GeminiCallback callback) {
+
+        if (context == null) {
+            return;
+        }
+
+        if (geminiPrompt == null || geminiPrompt.isEmpty()) {
+            return;
+        }
+
+        if (callback == null) {
+            Log.e(MainActivity.TAG, "getCommentsFromGemini(); a callback is required for this to work properly.");
+            return;
+        }
+
+        try {
+
+            String json = "{\"contents\": " +
+                    "[{\"parts\": " +
+                    "[{\"text\": " +
+                    "\"" + geminiPrompt + "\"" +
+                    "}]}]}";
+
+            RequestBody body = RequestBody.create(json, MediaType.get("application/json"));
+
+            // Go to https://aistudio.google.com/app/api-keys to get your API key
+            // Add the API key to local.properties with the key name "api.key"
+            // For the URL for this request, you can get it by clicking "Copy cURL quickstart" when
+            // viewing the API key details within the Google AI Studio website.
+            // The free tier was sufficient for this to work.
+            // The cURL quickstart is good for confirming whether the API key works.
+            Request r = new Request.Builder()
+                    .url("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent")
+                    .addHeader("X-goog-api-key", BuildConfig.GEMINI_API_KEY)
+                    .post(body)
+                    .build();
+
+            // This is just to make sure that the API key is being loaded correctly
+//            Log.v("TAG", "API_KEY: " + BuildConfig.API_KEY);
+
+            OkHttpClient okHttpClient = new OkHttpClient();
+
+            okHttpClient.newCall(r).enqueue(new Callback() {
+
+                /**
+                 * It is really important to log the error here if one occurs so that you can
+                 * better troubleshoot what is going wrong.
+                 * @param call
+                 * @param e
+                 */
+                @Override
+                public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                    callback.onError(e);
+                    ClickUtils.showBlockingAlert((Activity) context, "Gemini API Failure", "Failed to retrieve comments from Gemini.");
+                }
+
+                @Override
+                public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+
+                    // You cannot call .string() on response.body() more than one because it is a stream.
+                    ResponseBody body = response.body();
+                    String json = "";
+
+                    if (body == null) {
+                        callback.onError(new IOException("Empty response body"));
+                        return;
+                    }
+
+                    json = body.string();
+                    body.close();
+                    String extractedText = extractGeminiText(json);
+
+                    Log.v(MainActivity.TAG, "getCommentsFromGemini(); successful extract text response from Gemini: " + extractedText);
+
+                    callback.onSuccess(extractedText);
+
+                    }
+            }); // end of the callback
+
+        } catch (Exception e) {
+            callback.onError(e);
+            Log.v("classwork04", e.getMessage());
+        }
+    }
+
+    /**
+     * Returns a JSONArray from a JSONObject if it exists.
+     * @param obj
+     * @param name
+     * @return
+     */
+    public static JSONArray getJSONArray(JSONObject obj, String name) {
+        if (obj == null || name == null || name.isEmpty() || !obj.has(name)) {
+            return null;
+        }
+
+        JSONArray array = obj.optJSONArray(name);
+
+        if (array == null || array.length() == 0) {
+            return null;
+        }
+
+        return obj.optJSONArray(name);
+    }
+
+    /**
+     * Retrieve the "text" property of the response from Gemini.
+     * @param json
+     * @return
+     */
+    public static String extractGeminiText(String json) {
+        if (json == null || json.isEmpty()) {
+            return "";
+        }
+
+        try {
+            JSONObject root = new JSONObject(json);
+
+            JSONArray candidates = getJSONArray(root, "candidates");
+
+            if (candidates == null) {
+                return "";
+            }
+
+            JSONObject firstCandidate = candidates.optJSONObject(0);
+
+            if (firstCandidate == null) {
+                return "";
+            }
+
+            // "content" must be an object
+            JSONObject content = firstCandidate.optJSONObject("content");
+
+            if (content == null) {
+                return "";
+            }
+
+            JSONArray parts = getJSONArray(content, "parts");
+            if (parts == null) {
+                return "";
+            }
+
+            JSONObject firstPart = parts.optJSONObject(0);
+            if (firstPart == null) {
+                return "";
+            }
+
+            return firstPart.optString("text", "");
+
+        } catch (JSONException e) {
+            Log.e(MainActivity.TAG, "Error parsing JSON from Gemini response.");
+            return "";
+        }
+    }
+
 }
