@@ -34,25 +34,34 @@ public class SketchTagger extends AppCompatActivity {
 
         Button saveButton = findViewById(R.id.saveButton);
         MyDrawingArea mda = findViewById(R.id.mydrawingarea_main);
-        TextView textView = findViewById(R.id.tagsTextbox);
+        TextView tagsTextView = findViewById(R.id.tagsTextbox);
         saveButton.setOnClickListener(
-                ClickUtils.saveImageOnClick(this, mda, textView)
+                ClickUtils.saveImageOnClick(this, mda, tagsTextView)
         );
 
         // findImagesOnClick
         Button findButton = findViewById(R.id.findButton);
         TextView findTextView = findViewById(R.id.findTextbox);
         ListView lv = findViewById(R.id.photolist);
-        findButton.setOnClickListener(
-                ClickUtils.findImagesOnClick(
-                        this,
-                        findTextView.getText().toString(),
-                        DatabaseHelper.IMAGE_TYPE_SKETCH,
-                        data -> {
-                            this.adapter = new CommentListAdapter(this, R.layout.list_item, data);
-                            lv.setAdapter(adapter);
-                        }
-                )
+        findButton.setOnClickListener(v -> {
+            String findText = findTextView.getText().toString();
+
+            ClickUtils.findImagesOnClick(
+                    this,
+                    findText,
+                    DatabaseHelper.IMAGE_TYPE_SKETCH,
+                    data -> {
+                        this.adapter = new CommentListAdapter(this, R.layout.list_item, data, CommentListAdapter.Mode.NORMAL);
+                        lv.setAdapter(adapter);
+                    }
+            ).onClick(v);
+        });
+
+        // get tags on click
+        Button tagsButton = findViewById(R.id.getTagsButton);
+        tagsButton.setOnClickListener(
+                // the callback parameter of this function MUST NOT be NULL
+                ClickUtils.getGeminiTagsOnClick(this, mda, tagsTextView, data -> {})
         );
     }
 

@@ -30,8 +30,10 @@ android {
         }
 
         val apiKey: String? = properties.getProperty("api.key")
+        val visionApiKey : String? = properties.getProperty("vision.api.key")
 
-        buildConfigField("String", "API_KEY", "\"${apiKey ?: ""}\"")
+        buildConfigField("String", "GEMINI_API_KEY", "\"${apiKey ?: ""}\"")
+        buildConfigField("String", "VISION_API_KEY", "\"${visionApiKey ?: ""}\"")
     }
 
     buildTypes {
@@ -50,8 +52,22 @@ android {
 }
 
 dependencies {
-    //               this is needed to add the OkHttp library
+    // In libs.versions.toml, you can keep all dependency coordinates like (group:name:version)
+
+    // this is needed to add the OkHttp library
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
+    // These are needed to access the Google Vision API:
+    implementation("com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava")
+    implementation("com.google.api-client:google-api-client-android:1.23.0") {
+        exclude(module = "httpclient")
+    }
+    implementation("com.google.http-client:google-http-client-gson:1.23.0") {
+        exclude(module = "httpclient")
+    }
+    implementation("com.google.apis:google-api-services-vision:v1-rev369-1.23.0")
+
+    // these were standard when I created this project
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)

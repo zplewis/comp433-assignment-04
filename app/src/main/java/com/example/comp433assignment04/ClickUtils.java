@@ -15,6 +15,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import com.example.comp433assignment04.DataCallback;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,9 +42,18 @@ public final class ClickUtils {
      * @param message
      * @return
      */
-    public static View.OnClickListener showToastOnClick(Context context, String message) {
+    public static void showToastOnClick(Context context, String message) {
         Log.v(MainActivity.TAG, message);
-        return v -> Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
+
+        if (context == null) {
+            Log.w(MainActivity.TAG, "showToastOnClick: context is null");
+            return;
+        }
+
+        // Always post to the main (UI) thread
+        new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+           Toast.makeText(context.getApplicationContext(), message, Toast.LENGTH_SHORT).show();
+        });
     }
 
     /**
@@ -188,10 +198,95 @@ public final class ClickUtils {
         return v -> {
 
             Log.v(MainActivity.TAG, "Clicked find from " + getContextClass(context));
+            Log.v(MainActivity.TAG, "Photos to return: " + DatabaseHelper.getImageTypeName(imageType));
 
             ArrayList<CommentItem> comments = DatabaseHelper.findImages(context, tags, imageType);
 
+            int numComments = comments.size();
+
+            showToastOnClick(context, numComments + " images found.");
+
             callback.onData(comments);
+        };
+    }
+
+    public static View.OnClickListener getCommentsOnClick(
+            Context context,
+            String tags,
+            DataCallback<ArrayList<CommentItem>> callback
+    ) {
+        return v -> {
+
+        };
+    }
+
+    /**
+     * Retrieve tags from Google Vision API based on the image in the main view of the activity.
+     * This could be a photo or a sketch.
+     * @param context
+     * @param sourceView
+     * @param textView
+     * @param callback
+     * @return
+     */
+    public static View.OnClickListener getGeminiTagsOnClick(
+            Context context,
+            View sourceView,
+            TextView textView,
+            DataCallback<String> callback
+    ) {
+        return v -> {
+
+            if (textView == null) {
+                showBlockingAlert((Activity) context,
+                        "Could not retrieve tags",
+                    "Fatal error prevented the app from calling Google Vision API for the tags."
+                );
+                return;
+            }
+
+            Bitmap bitmap = getBitmapFromView(sourceView);
+
+            if (bitmap == null) {
+                showBlockingAlert((Activity) context, "No image", "Must have a valid image before retrieving tags.");
+                return;
+            }
+
+            showToastOnClick(context, "Fetching tags...");
+
+            Thread thread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Log.v(MainActivity.TAG, "Entering vision test try block...");
+                        String[] tags = GeminiHelper.myVisionTester(bitmap);
+
+                        String tagsJoined = String.join(", ", tags);
+
+                        textView.setText(tagsJoined);
+
+                        Log.v(MainActivity.TAG, "The vision test has completed.");
+                        showToastOnClick(context, "Tags have been retrieved for the current image.");
+
+                        callback.onData(tagsJoined);
+
+                        return;
+                    } catch (IOException e) {
+                        showBlockingAlert((Activity) context, "Could not get tags", "Failed to tag image via Google Vision API.");
+                        e.printStackTrace();
+
+                        String errorMessage = e.getMessage();
+                        if (errorMessage != null && !errorMessage.isEmpty()) {
+                            Log.e(MainActivity.TAG, errorMessage);
+                        }
+
+                        textView.setText(null);
+                        callback.onData("");
+                    }
+                }
+            });
+
+            thread.start();
         };
     }
 }

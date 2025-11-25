@@ -53,6 +53,22 @@ public class DatabaseHelper {
 
     private DatabaseHelper() {}
 
+    public static String getImageTypeName(int imageType) {
+        if (imageType < 0 || imageType > 2) {
+            return "";
+        }
+
+        if (imageType == IMAGE_TYPE_BOTH) {
+            return "IMAGE_TYPE_BOTH";
+        }
+
+        if (imageType == IMAGE_TYPE_PHOTO) {
+            return "IMAGE_TYPE_PHOTO";
+        }
+
+        return "IMAGE_TYPE_SKETCH";
+    }
+
     /**
      * Makes sure the database and required tables have been created, if they do not exist already.
      * Enables dropping the tables and recreating them as well.
@@ -81,7 +97,7 @@ public class DatabaseHelper {
             if (clearTables) {
                 mydb.execSQL("DROP TABLE IF EXISTS images");
                 mydb.execSQL("DROP TABLE IF EXISTS image_tags");
-                Log.v(MainActivity.TAG, "All SQLite tables for this app have been dropped.");
+                ClickUtils.showToastOnClick(context, "All SQLite tables for this app have been dropped and created again.");
             }
 
             // Create a table that keeps up with image blobs if it does not exist already
@@ -317,10 +333,11 @@ public class DatabaseHelper {
             return new ArrayList<>();
         }
 
-        if (tags == null || tags.isEmpty()) {
-            Log.e(MainActivity.TAG, "findImages(); TextView containing the tags is null");
-            return new ArrayList<>();
-        }
+        // It is allowed to search and provide no search terms!
+//        if (tags == null || tags.isEmpty()) {
+//            Log.e(MainActivity.TAG, "findImages(); TextView containing the tags is null");
+//            return new ArrayList<>();
+//        }
 
         Log.v("findImages", "findImages(); findText: " + tags);
 
@@ -370,7 +387,7 @@ public class DatabaseHelper {
 
                 Log.v(MainActivity.TAG, "getCommentItems(); index: " + i + ", hasData: " + hasData);
 
-                // stop here if there is no data
+                // stop here if there is no more data
                 if (!hasData) {
                     break;
                 }
@@ -419,22 +436,23 @@ public class DatabaseHelper {
 
         // We need to first identify the image that we want based on the tags, and then,
         // return all of the tags in our response
-        String sql = "; WITH selected_images AS (SELECT DISTINCT t7.image_id FROM image_tags ";
+        String sql = "; WITH selected_images AS (SELECT DISTINCT t7.IMAGE_ID FROM image_tags AS t7 ";
 
-        if (imageType > IMAGE_TYPE_BOTH) {
+        if (imageType > IMAGE_TYPE_BOTH && findText != null && !findText.trim().isEmpty()) {
             sql += " WHERE LOWER(t7.tag) LIKE '%' || LOWER('" + findText + "') || '%' ";
         }
 
         sql += ") " +
-                "SELECT t1.image, GROUP_CONCAT(DISTINCT t2.TAG) AS TAGS, datetime(t1.CREATED_AT, 'localtime') AS CREATED_AT " +
+                "SELECT t1.IMAGE, GROUP_CONCAT(DISTINCT t2.TAG) AS TAGS, datetime(t1.CREATED_AT, 'localtime') AS CREATED_AT " +
                 "FROM IMAGES AS t1 " +
-                "INNER JOIN image_tags AS t2 ON t2.image_id = t1.id " +
-                "INNER JOIN selected_images AS t3 ON t3.image_id = t1.id ";
+                "INNER JOIN image_tags AS t2 ON t2.IMAGE_ID = t1.ID " +
+                "INNER JOIN selected_images AS t3 ON t3.IMAGE_ID = t1.ID ";
 
         if (imageType > IMAGE_TYPE_BOTH) {
-            sql += " WHERE IMAGE_TYPE_ID = " + imageType;
+            sql += " WHERE t1.IMAGE_TYPE_ID = " + imageType;
         }
 
+        sql += " GROUP BY t1.IMAGE, t1.CREATED_AT ";
         sql += " ORDER BY t1.CREATED_AT DESC";
         return sql;
     }

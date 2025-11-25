@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -29,6 +30,9 @@ public class MainActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
+        // create the database tables if they have not been already
+        DatabaseHelper.setupDBAndTables(this, false);
     }
 
     // region Home Buttons
@@ -69,7 +73,12 @@ public class MainActivity extends AppCompatActivity {
         onClickHomeButtons(view, CommentBoard.class);
     }
 
+    /**
+     * Clears the SQLite database.
+     * @param view
+     */
     public void onClickBtnClearDB(View view) {
+        DatabaseHelper.setupDBAndTables(this, true);
     }
 
     // endregion

@@ -68,16 +68,25 @@ public class PhotoTagger extends AppCompatActivity {
         Button findButton = findViewById(R.id.findButton);
         TextView findTextView = findViewById(R.id.findTextbox);
         ListView lv = findViewById(R.id.photolist);
-        findButton.setOnClickListener(
+        findButton.setOnClickListener(v -> {
+            String findText = findTextView.getText().toString();
+
             ClickUtils.findImagesOnClick(
-                this,
-                findTextView.getText().toString(),
-                DatabaseHelper.IMAGE_TYPE_PHOTO,
-                data -> {
-                    this.adapter = new CommentListAdapter(this, R.layout.list_item, data);
-                    lv.setAdapter(adapter);
-                }
-            )
+                    this,
+                    findText,
+                    DatabaseHelper.IMAGE_TYPE_PHOTO,
+                    data -> {
+                        this.adapter = new CommentListAdapter(this, R.layout.list_item, data, CommentListAdapter.Mode.NORMAL);
+                        lv.setAdapter(adapter);
+                    }
+            ).onClick(v);
+        });
+
+        // get tags on click
+        Button tagsButton = findViewById(R.id.getTagsButton);
+        tagsButton.setOnClickListener(
+            // the callback parameter of this function MUST NOT be NULL
+            ClickUtils.getGeminiTagsOnClick(this, iv, findTextView, data -> {})
         );
     }
 

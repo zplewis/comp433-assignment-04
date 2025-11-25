@@ -179,8 +179,16 @@ public class MyDrawingArea extends View {
         return path.isEmpty();
     }
 
+    /**
+     * If a path is drawn on the canvas, return a Bitmap object.
+     * @return
+     */
     public Bitmap getBitmap()
     {
+        if (isEmpty()) {
+            return null;
+        }
+
         bmp = Bitmap.createBitmap(getWidth(), getHeight(), Bitmap.Config.ARGB_8888);
         Canvas c = new Canvas(bmp);
         c.drawColor(Color.parseColor("#AAAAAA"));

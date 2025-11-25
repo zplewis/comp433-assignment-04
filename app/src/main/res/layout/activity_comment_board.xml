@@ -65,6 +65,7 @@
             android:layout_height="wrap_content"
             android:id="@+id/chkIncludeSketches"
             android:checked="true"
+            />
 
 
         <TextView
@@ -81,6 +82,49 @@
     </LinearLayout>
 
 
+
+    <ListView
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:id="@+id/listSearchResults"
+        />
+
+    <!-- textview that shows if you selected a picture and the Comment button -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginVertical="10dp"
+        >
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:autofillHints="cars, vehicles"
+            android:textSize="@dimen/comment_text_size"
+            android:id="@+id/tvSelectedTextView"
+            android:text="Please make a selection"
+            />
+
+        <Button
+            android:id="@+id/commentButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onClickCommentBtn"
+            android:text="Comment"
+            android:layout_marginStart="2sp"
+            />
+
+    </LinearLayout>
+
+    <ListView
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:id="@+id/listSearchResults"
+        />
+
+    <!-- the back button at the bottom of the activity -->
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
